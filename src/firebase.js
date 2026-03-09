@@ -8,8 +8,6 @@ import {
   getAuth,
   GoogleAuthProvider,
   signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
   signOut,
 } from "firebase/auth";
 import {
@@ -40,14 +38,7 @@ const app = initializeApp(firebaseConfig);
 // ── Auth ──────────────────────────────────────────────────────────
 export const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
-export const signInWithGoogle = () => {
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  if (isMobile) {
-    return signInWithRedirect(auth, provider);
-  } else {
-    return signInWithPopup(auth, provider);
-  }
-};
+export const signInWithGoogle = () => signInWithPopup(auth, provider);
 export const logOut = () => signOut(auth);
 
 // ── Firestore ─────────────────────────────────────────────────────
