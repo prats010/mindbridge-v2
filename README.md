@@ -59,18 +59,6 @@ On first login, users register a trusted contact (friend, parent, counsellor). T
 
 ---
 
-## 🖥️ Screenshots
-
-| Login | Chat | Assessment |
-|-------|------|------------|
-| ![Login](https://via.placeholder.com/300x200/0D1117/0D9488?text=Login+Page) | ![Chat](https://via.placeholder.com/300x200/0D1117/0D9488?text=Chat+Page) | ![Assessment](https://via.placeholder.com/300x200/0D1117/0D9488?text=PHQ-9+Assessment) |
-
-| Dashboard | Insights | History |
-|-----------|----------|---------|
-| ![Dashboard](https://via.placeholder.com/300x200/0D1117/0D9488?text=Dashboard) | ![Insights](https://via.placeholder.com/300x200/0D1117/0D9488?text=AI+Insights) | ![History](https://via.placeholder.com/300x200/0D1117/0D9488?text=Chat+History) |
-
----
-
 ## 🛠️ Tech Stack
 
 | Layer | Technology | Why |
