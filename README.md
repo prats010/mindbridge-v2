@@ -8,7 +8,7 @@
 
 **Built for India · Powered by Google Gemini · 100% Free**
 
-[![Live Demo](https://img.shields.io/badge/🧠_Live_Demo-Visit_App-0D9488?style=for-the-badge)](https://mindbridge-v2.web.app)
+[![Live Demo](https://img.shields.io/badge/🧠_Live_Demo-Visit_App-0D9488?style=for-the-badge)](https://mindbridge-v2-18fa8.web.app/)
 [![Made with Gemini](https://img.shields.io/badge/Google_Gemini-2.5_Flash-4285F4?style=for-the-badge&logo=google)](https://aistudio.google.com)
 [![Firebase](https://img.shields.io/badge/Firebase-Powered-FF6F00?style=for-the-badge&logo=firebase)](https://firebase.google.com)
 [![License](https://img.shields.io/badge/License-MIT-7C3AED?style=for-the-badge)](LICENSE)
