@@ -38,7 +38,8 @@ const app = initializeApp(firebaseConfig);
 // ── Auth ──────────────────────────────────────────────────────────
 export const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
-export const signInWithGoogle = () => signInWithPopup(auth, provider);
+import { signInWithRedirect, getRedirectResult } from "firebase/auth";
+export const signInWithGoogle = () => signInWithRedirect(auth, provider);
 export const logOut = () => signOut(auth);
 
 // ── Firestore ─────────────────────────────────────────────────────

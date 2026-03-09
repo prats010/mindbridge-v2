@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, saveUserProfile, getTrustedContact } from "./firebase";
-
+import { getRedirectResult } from "firebase/auth";
 // Main App Layout & Pages
 import Layout from "./components/Layout";
 import CrisisModal from "./components/CrisisModal";
@@ -43,35 +43,40 @@ export default function App() {
   const [checkingContact, setCheckingContact] = useState(false);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (u) => {
-      if (u) {
+  getRedirectResult(auth).catch(console.error);
+  
+  const unsub = onAuthStateChanged(auth, async (u) => {
+    if (u) {
+      try {
         await saveUserProfile(u.uid, {
           displayName: u.displayName,
           email: u.email,
           photoURL: u.photoURL,
         });
-
-        // Check if trusted contact already exists
-        setCheckingContact(true);
-        try {
-          const tc = await getTrustedContact(u.uid);
-          if (tc) {
-            setTrustedContactSaved(true);
-            setTrustedContactData(tc);
-          } else {
-            setTrustedContactSaved(false);
-          }
-        } catch {
-          setTrustedContactSaved(false);
-        } finally {
-          setCheckingContact(false);
-        }
+      } catch (err) {
+        console.error("Profile save failed:", err);
       }
-      setUser(u);
-      setLoading(false);
-    });
-    return unsub;
-  }, []);
+
+      setCheckingContact(true);
+      try {
+        const tc = await getTrustedContact(u.uid);
+        if (tc) {
+          setTrustedContactSaved(true);
+          setTrustedContactData(tc);
+        } else {
+          setTrustedContactSaved(false);
+        }
+      } catch {
+        setTrustedContactSaved(false);
+      } finally {
+        setCheckingContact(false);
+      }
+    }
+    setUser(u);
+    setLoading(false);
+  });
+  return unsub;
+}, []);
 
   const isLoading = loading || (user && checkingContact);
 
