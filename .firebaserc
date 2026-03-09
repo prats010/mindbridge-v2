@@ -1,0 +1,8 @@
+{
+  "projects": {
+    "staging": "mindbridge-v2-18fa8",
+    "default": "mindbridge-v2-18fa8"
+  },
+  "targets": {},
+  "etags": {}
+}
