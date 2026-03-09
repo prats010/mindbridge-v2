@@ -42,33 +42,41 @@ export default function App() {
   const [checkingContact, setCheckingContact] = useState(false);
 
   useEffect(() => {
+    console.log("[App.jsx] Initializing onAuthStateChanged listener...");
     const unsub = onAuthStateChanged(auth, async (u) => {
+      console.log("[App.jsx] Auth state changed. User:", u?.uid || u);
       if (u) {
         try {
+          console.log("[App.jsx] Saving user profile...");
           await saveUserProfile(u.uid, {
             displayName: u.displayName,
             email: u.email,
             photoURL: u.photoURL,
           });
+          console.log("[App.jsx] User profile saved.");
         } catch (err) {
           console.error("Profile save failed:", err);
         }
 
         setCheckingContact(true);
         try {
+          console.log("[App.jsx] Fetching trusted contact...");
           const tc = await getTrustedContact(u.uid);
+          console.log("[App.jsx] Trusted contact fetched:", tc);
           if (tc) {
             setTrustedContactSaved(true);
             setTrustedContactData(tc);
           } else {
             setTrustedContactSaved(false);
           }
-        } catch {
+        } catch (err) {
+          console.error("[App.jsx] Error fetching trusted contact:", err);
           setTrustedContactSaved(false);
         } finally {
           setCheckingContact(false);
         }
       }
+      console.log("[App.jsx] Setting user and setLoading(false)...");
       setUser(u);
       setLoading(false);
     });
