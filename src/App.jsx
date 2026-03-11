@@ -33,6 +33,10 @@ import TechStack from "./pages/docs/TechStack";
 // Marketing
 import MarketingPage from "./pages/MarketingPage";
 
+/** Rejects after `ms` milliseconds — prevents Firestore from hanging the loading screen */
+const withTimeout = (promise, ms = 5000) =>
+  Promise.race([promise, new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), ms))]);
+
 export default function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -48,20 +52,20 @@ export default function App() {
       if (u) {
         try {
           console.log("[App.jsx] Saving user profile...");
-          await saveUserProfile(u.uid, {
+          await withTimeout(saveUserProfile(u.uid, {
             displayName: u.displayName,
             email: u.email,
             photoURL: u.photoURL,
-          });
+          }));
           console.log("[App.jsx] User profile saved.");
         } catch (err) {
-          console.error("Profile save failed:", err);
+          console.error("Profile save failed (non-blocking):", err);
         }
 
         setCheckingContact(true);
         try {
           console.log("[App.jsx] Fetching trusted contact...");
-          const tc = await getTrustedContact(u.uid);
+          const tc = await withTimeout(getTrustedContact(u.uid));
           console.log("[App.jsx] Trusted contact fetched:", tc);
           if (tc) {
             setTrustedContactSaved(true);
@@ -70,7 +74,7 @@ export default function App() {
             setTrustedContactSaved(false);
           }
         } catch (err) {
-          console.error("[App.jsx] Error fetching trusted contact:", err);
+          console.error("[App.jsx] Error fetching trusted contact (non-blocking):", err);
           setTrustedContactSaved(false);
         } finally {
           setCheckingContact(false);
