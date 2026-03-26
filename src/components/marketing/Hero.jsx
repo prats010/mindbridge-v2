@@ -1,8 +1,10 @@
 import { useScrollReveal } from '../../hooks/useScrollReveal';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '../../context/LanguageContext';
 
 export function Hero() {
     const { ref, isVisible } = useScrollReveal();
+    const { t } = useLanguage();
 
     return (
         <section className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden bg-[#080C14]">
@@ -19,33 +21,33 @@ export function Hero() {
             >
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0D1117] border border-[#1A1F2E] mb-8 shadow-sm">
                     <span className="text-[#0D9488] text-xs">✦</span>
-                    <span className="text-xs font-medium text-[#8B949E] tracking-wide uppercase">Powered by Google Gemini</span>
+                    <span className="text-xs font-medium text-[#8B949E] tracking-wide uppercase">{t("hero.badge")}</span>
                 </div>
 
                 <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-[#F0F6FC] mb-6 leading-[1.1]">
-                    Mental health support that <br className="hidden md:block" />
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0D9488] to-[#7C3AED]">actually understands you</span>
+                    {t("hero.headline1")} <br className="hidden md:block" />
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0D9488] to-[#7C3AED]">{t("hero.headline2")}</span>
                 </h1>
 
                 <p className="text-lg md:text-xl text-[#8B949E] max-w-[600px] mb-10 leading-relaxed font-light">
-                    An empathetic, private, and intelligent companion built for India. Access clinical-grade screenings, daily mood tracking, and instant support without the cost.
+                    {t("hero.sub")}
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-center gap-4 mb-8">
                     <Link to="/login" className="w-full sm:w-auto px-8 py-3 rounded-full bg-[#F0F6FC] text-[#080C14] font-medium hover:bg-white transition-colors duration-200">
-                        Get Started Free
+                        {t("hero.cta1")}
                     </Link>
                     <a href="#how-it-works" className="w-full sm:w-auto px-8 py-3 rounded-full bg-[#0D1117] text-[#F0F6FC] border border-[#1A1F2E] font-medium hover:bg-[#1A1F2E] transition-colors duration-200">
-                        See how it works
+                        {t("hero.cta2")}
                     </a>
                 </div>
 
                 <p className="text-sm text-[#8B949E] flex items-center gap-2">
-                    <span>No subscription</span>
+                    <span>{t("hero.trust1")}</span>
                     <span>·</span>
-                    <span>100% free</span>
+                    <span>{t("hero.trust2")}</span>
                     <span>·</span>
-                    <span>Built for India</span>
+                    <span>{t("hero.trust3")}</span>
                 </p>
 
                 {/* Floating Chat Mockup */}
@@ -55,7 +57,7 @@ export function Hero() {
 
                         <div className="flex items-end justify-end gap-2">
                             <div className="bg-[#1A1F2E] text-[#F0F6FC] px-4 py-2.5 rounded-2xl rounded-tr-sm max-w-[80%] text-[15px]">
-                                I'm feeling really overwhelmed with everything going on right now.
+                                {t("hero.chat.user")}
                             </div>
                         </div>
 
@@ -64,7 +66,7 @@ export function Hero() {
                                 <span className="text-white text-xs">🧠</span>
                             </div>
                             <div className="bg-[#080C14] border border-[#1A1F2E] text-[#8B949E] px-4 py-3 rounded-2xl rounded-tl-sm max-w-[85%] text-[15px] leading-relaxed">
-                                I hear you. It's completely valid to feel overwhelmed when so much is on your plate. Take a deep breath. Would it help to break down what's on your mind right now?
+                                {t("hero.chat.ai")}
                             </div>
                         </div>
 

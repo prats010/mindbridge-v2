@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import LanguageSelector from '../LanguageSelector';
+import { useLanguage } from '../../context/LanguageContext';
 
 export function MarketingNavbar() {
     const [scrolled, setScrolled] = useState(false);
+    const { t } = useLanguage();
 
     useEffect(() => {
         const handleScroll = () => {
@@ -27,17 +30,18 @@ export function MarketingNavbar() {
             </div>
 
             <div className="hidden md:flex items-center gap-8 text-sm font-medium text-[#8B949E]">
-                <button onClick={() => scrollToSection('features')} className="hover:text-[#F0F6FC] transition-colors">Features</button>
-                <button onClick={() => scrollToSection('how-it-works')} className="hover:text-[#F0F6FC] transition-colors">How it Works</button>
-                <Link to="/docs" className="hover:text-[#F0F6FC] transition-colors">Documentation</Link>
+                <button onClick={() => scrollToSection('features')} className="hover:text-[#F0F6FC] transition-colors">{t("mkt.nav.features")}</button>
+                <button onClick={() => scrollToSection('how-it-works')} className="hover:text-[#F0F6FC] transition-colors">{t("mkt.nav.howItWorks")}</button>
+                <Link to="/docs" className="hover:text-[#F0F6FC] transition-colors">{t("mkt.nav.docs")}</Link>
             </div>
 
-            <div className="flex items-center">
+            <div className="flex items-center gap-3">
+                <LanguageSelector variant="navbar" />
                 <Link
                     to="/login"
                     className="text-sm font-medium text-[#F0F6FC] bg-[#0D1117] border border-[#0D9488]/40 hover:border-[#0D9488] px-4 py-2 rounded-full transition-all duration-300 shadow-[0_0_15px_rgba(13,148,136,0.15)] hover:shadow-[0_0_20px_rgba(13,148,136,0.3)]"
                 >
-                    Try for free &rarr;
+                    {t("mkt.nav.tryFree")}
                 </Link>
             </div>
         </nav>

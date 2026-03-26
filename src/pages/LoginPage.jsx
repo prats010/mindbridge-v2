@@ -1,9 +1,12 @@
 // src/pages/LoginPage.jsx
 import { useState } from "react";
 import { signInWithGoogle } from "../firebase";
+import { useLanguage } from "../context/LanguageContext";
+import LanguageSelector from "../components/LanguageSelector";
 
 export default function LoginPage() {
   const [signingIn, setSigningIn] = useState(false);
+  const { t } = useLanguage();
 
   const handleLogin = async () => {
     if (signingIn) return;
@@ -20,18 +23,21 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center p-4 bg-[#0A0C10]">
       {/* Card */}
       <div className="w-full max-w-sm text-left animate-fade-in">
-        {/* Brain logo */}
-        <div className="flex items-center gap-3 mb-8">
-          <span className="text-3xl">🧠</span>
-          <span className="text-2xl font-bold text-slate-100 tracking-tight">MindBridge</span>
+        {/* Brain logo + language selector row */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <span className="text-3xl">🧠</span>
+            <span className="text-2xl font-bold text-slate-100 tracking-tight">MindBridge</span>
+          </div>
+          <LanguageSelector variant="navbar" />
         </div>
 
         <h1 className="text-2xl font-semibold mb-2 text-slate-100 tracking-tight">
-          Welcome back
+          {t("login.welcome")}
         </h1>
 
         <p className="text-slate-400 text-sm mb-8 leading-relaxed">
-          Sign in to access your personal wellness companion, track your mood, and talk to MindBridge AI.
+          {t("login.subtitle")}
         </p>
 
         {/* Card container */}
@@ -51,20 +57,20 @@ export default function LoginPage() {
                 <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
               </svg>
             )}
-            {signingIn ? "Signing in…" : "Continue with Google"}
+            {signingIn ? t("login.signingIn") : t("login.continueGoogle")}
           </button>
 
           <div className="mt-6 pt-5 border-t border-slate-800/60">
             <p className="text-xs text-slate-500 leading-relaxed text-center">
-              MindBridge is not a substitute for professional care.<br />
-              Crisis? Call <a href="tel:9152987821" className="text-slate-300 hover:text-white underline transition-colors">iCall: 9152987821</a>
+              {t("login.disclaimer")}<br />
+              {t("login.crisis")} <a href="tel:9152987821" className="text-slate-300 hover:text-white underline transition-colors">iCall: 9152987821</a>
             </p>
           </div>
         </div>
 
         {/* Trust badges */}
         <div className="mt-8 flex justify-center gap-6">
-          {["Secure", "AI-Powered", "Free"].map((b) => (
+          {[t("login.badge.secure"), t("login.badge.ai"), t("login.badge.free")].map((b) => (
             <span key={b} className="text-xs text-slate-500 font-medium">{b}</span>
           ))}
         </div>

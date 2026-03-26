@@ -2,20 +2,25 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { MessageCircle, ClipboardList, BarChart2, LogOut, Shield, X, HelpCircle, BookOpen, Info } from "lucide-react";
-import { logOut, getTrustedContact } from "../firebase";
+import { getTrustedContact } from "../firebase";
 import TrustedContactModal from "./TrustedContactModal";
+import AccountPanel from "./AccountPanel";
+import LanguageSelector from "./LanguageSelector";
+import { useLanguage } from "../context/LanguageContext";
 
 export default function Sidebar({ user, mobileOpen, setMobileOpen }) {
     const { pathname } = useLocation();
+    const { t } = useLanguage();
     const [showEdit, setShowEdit] = useState(false);
     const [contactData, setContactData] = useState(null);
+    const [showAccountPanel, setShowAccountPanel] = useState(false);
 
     const links = [
-        { to: "/chat", label: "MindBridge AI", icon: <MessageCircle className="w-[18px] h-[18px]" /> },
-        { to: "/dashboard", label: "Dashboard", icon: <BarChart2 className="w-[18px] h-[18px]" /> },
-        { to: "/assessment", label: "Assessments", icon: <ClipboardList className="w-[18px] h-[18px]" /> },
-        { to: "/docs/depression", label: "Mental Health Guides", icon: <BookOpen className="w-[18px] h-[18px]" /> },
-        { to: "/docs/mission", label: "About Us", icon: <Info className="w-[18px] h-[18px]" /> },
+        { to: "/chat", labelKey: "nav.chat", icon: <MessageCircle className="w-[18px] h-[18px]" /> },
+        { to: "/dashboard", labelKey: "nav.dashboard", icon: <BarChart2 className="w-[18px] h-[18px]" /> },
+        { to: "/assessment", labelKey: "nav.assessments", icon: <ClipboardList className="w-[18px] h-[18px]" /> },
+        { to: "/info/depression", labelKey: "nav.guides", icon: <BookOpen className="w-[18px] h-[18px]" /> },
+        { to: "/info/mission", labelKey: "nav.about", icon: <Info className="w-[18px] h-[18px]" /> },
     ];
 
     const openEdit = async () => {
@@ -70,7 +75,7 @@ export default function Sidebar({ user, mobileOpen, setMobileOpen }) {
                                 <span className={`transition-colors duration-200 ${active ? "text-teal-400" : "text-slate-500 group-hover:text-slate-300"}`}>
                                     {l.icon}
                                 </span>
-                                <span>{l.label}</span>
+                                <span>{t(l.labelKey)}</span>
                             </Link>
                         );
                     })}
@@ -80,25 +85,34 @@ export default function Sidebar({ user, mobileOpen, setMobileOpen }) {
                 <div className="shrink-0 p-4 pt-3 pb-5 mt-auto">
                     {/* Action Links */}
                     <div className="px-2 mb-4 space-y-0.5 border-t border-[var(--border)] pt-4">
+
+                        {/* Language Selector — above Trusted Contact */}
+                        <div className="mb-1">
+                            <LanguageSelector variant="sidebar" />
+                        </div>
+
                         <button
                             onClick={openEdit}
                             className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-white transition-colors text-sm font-medium"
                         >
                             <Shield className="w-4 h-4 text-slate-500" />
-                            Trusted Contact
+                            {t("nav.trustedContact")}
                         </button>
                         <Link
-                            to="/docs/what-is-mindbridge"
+                            to="/info/what-is-mindbridge"
                             onClick={() => setMobileOpen(false)}
                             className="w-full flex items-center gap-3 px-2 py-2 rounded-lg text-[var(--text-muted)] hover:bg-[var(--bg-hover)] hover:text-white transition-colors text-sm font-medium"
                         >
                             <HelpCircle className="w-4 h-4 text-slate-500" />
-                            Help & Support
+                            {t("nav.helpSupport")}
                         </Link>
                     </div>
 
                     {/* User Profile Block */}
-                    <div className="flex items-center gap-3 px-2 py-2 rounded-xl group hover:bg-[var(--bg-hover)] transition-colors cursor-pointer border border-transparent hover:border-[var(--border)]">
+                    <div 
+                        onClick={() => setShowAccountPanel(!showAccountPanel)}
+                        className="flex items-center gap-3 px-2 py-2 rounded-xl group hover:bg-[var(--bg-hover)] transition-colors cursor-pointer border border-transparent hover:border-[var(--border)]"
+                    >
                         {user.photoURL ? (
                             <img src={user.photoURL} alt="" className="w-9 h-9 rounded-full shrink-0 object-cover" />
                         ) : (
@@ -114,13 +128,6 @@ export default function Sidebar({ user, mobileOpen, setMobileOpen }) {
                                 {user.email || ""}
                             </span>
                         </div>
-                        <button
-                            onClick={(e) => { e.stopPropagation(); logOut(); }}
-                            className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors shrink-0 opacity-0 group-hover:opacity-100"
-                            title="Logout"
-                        >
-                            <LogOut className="w-4 h-4" />
-                        </button>
                     </div>
                 </div>
             </aside>
@@ -135,6 +142,13 @@ export default function Sidebar({ user, mobileOpen, setMobileOpen }) {
                     onClose={() => setShowEdit(false)}
                 />
             )}
+
+            {/* Account panel */}
+            <AccountPanel
+                user={user}
+                isOpen={showAccountPanel}
+                onClose={() => setShowAccountPanel(false)}
+            />
         </>
     );
 }

@@ -1,8 +1,4 @@
 // src/firebase.js
-// ─────────────────────────────────────────────────────────────────
-// Paste your Firebase config values into the .env file.
-// Get them from: Firebase Console → Project Settings → Your Apps
-// ─────────────────────────────────────────────────────────────────
 import { initializeApp } from "firebase/app";
 import {
   getAuth,
@@ -49,7 +45,7 @@ export async function createSession(userId) {
   const sessionRef = await addDoc(collection(db, "conversations", userId, "sessions"), {
     createdAt: serverTimestamp(),
     firstMessage: "New Chat",
-    messageCount: 0
+    messageCount: 0,
   });
   return sessionRef.id;
 }
@@ -61,7 +57,7 @@ export async function getSessions(userId) {
     orderBy("createdAt", "desc")
   );
   const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
 /** Get messages for a specific session */
@@ -72,16 +68,13 @@ export async function getSessionMessages(userId, sessionId, max = 50) {
     limit(max)
   );
   const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() })).reverse();
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() })).reverse();
 }
 
 /** Update session preview */
 export async function updateSessionPreview(userId, sessionId, firstMessage, count) {
   const ref = doc(db, "conversations", userId, "sessions", sessionId);
-  await setDoc(ref, {
-    firstMessage,
-    messageCount: count
-  }, { merge: true });
+  await setDoc(ref, { firstMessage, messageCount: count }, { merge: true });
 }
 
 /** Save a message to a session */
@@ -158,7 +151,6 @@ export async function saveUserProfile(userId, data) {
 }
 
 // ── Trusted Contact ───────────────────────────────────────────────
-// Stored as a nested field on users/{uid} so existing Firestore rules apply.
 
 /** Get trusted contact for user (returns null if not set) */
 export async function getTrustedContact(userId) {
@@ -172,14 +164,18 @@ export async function getTrustedContact(userId) {
 /** Save trusted contact for user */
 export async function saveTrustedContact(userId, { name, phone, relationship }) {
   const ref = doc(db, "users", userId);
-  await setDoc(ref, {
-    trustedContact: {
-      name,
-      phone,
-      relationship,
-      addedAt: serverTimestamp(),
+  await setDoc(
+    ref,
+    {
+      trustedContact: {
+        name,
+        phone,
+        relationship,
+        addedAt: serverTimestamp(),
+      },
     },
-  }, { merge: true });
+    { merge: true }
+  );
 }
 
 // ── AI Insights ───────────────────────────────────────────────────
@@ -208,4 +204,20 @@ export async function loadInsights(userId, max = 3) {
       date: data.timestamp?.toDate().toLocaleDateString("en-IN") ?? "—",
     };
   });
+}
+
+// ── Personality ───────────────────────────────────────────────────
+
+/** Save personality test results */
+export async function savePersonality(userId, data) {
+  const ref = doc(db, "users", userId);
+  await setDoc(ref, { personality: data }, { merge: true });
+}
+
+/** Get personality test results (returns null if not done) */
+export async function getPersonality(userId) {
+  const ref = doc(db, "users", userId);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return null;
+  return snap.data().personality ?? null;
 }

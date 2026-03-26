@@ -1,13 +1,39 @@
 // src/gemini.js
-// ─────────────────────────────────────────────────────────────────
-// Calls Gemini API directly from the browser. No backend needed.
-// API key comes from .env (VITE_GEMINI_API_KEY)
-// ─────────────────────────────────────────────────────────────────
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
-// ── System Prompt ─────────────────────────────────────────────────
+// ── Your Own Trained Model ────────────────────────────────────────
+const OWN_MODEL_URL = "https://prats010-mindbridge-chat.hf.space/api/chat";
+
+/**
+ * Send a message to YOUR trained MindBridge model on Hugging Face
+ * @param {string} message - user message
+ * @returns {Promise<string>} AI response text
+ */
+export async function sendToOwnModel(message) {
+  try {
+    const { Client } = await import("@gradio/client");
+    const client = await Client.connect("prats010/mindbridge-chat");
+    const result = await client.predict("/chat", {
+      user_input: message,
+    });
+    // Handle different response formats
+    let response = result.data;
+    if (Array.isArray(response)) {
+      response = response[0];
+    }
+    if (typeof response === "object" && response !== null) {
+      response = response.text || response.message || JSON.stringify(response);
+    }
+    return String(response);
+  } catch (err) {
+    console.error("Own model failed, falling back to Gemini:", err);
+    return null;
+  }
+}
+
+// ── Base System Prompt ────────────────────────────────────────────
 const SYSTEM_PROMPT = `You are MindBridge, a compassionate AI mental health support companion.
 Your role is to provide emotional support, psychoeducation, and coping strategies.
 
@@ -36,16 +62,37 @@ NEVER:
 - Give medication advice
 - Minimize feelings with toxic positivity`;
 
+/** Build personality note to inject into system prompt */
+function buildPersonalityNote(personality) {
+  if (!personality) return "";
+  return `
+
+USER PERSONALITY PROFILE (adjust all responses based on this):
+- Self-described personality: ${personality.personality}
+- What they need when struggling: ${personality.support}
+- Emotional comfort level: ${personality.comfort}
+- How they cope with stress: ${personality.coping}
+- Current situation: ${personality.situation}
+- Preferred support tone: ${personality.tone}
+
+Always adapt your communication style to match this profile. 
+If they prefer "just someone to listen", avoid jumping to advice.
+If they are introverted or emotionally uncomfortable, be extra gentle and don't push.
+If they prefer motivational tone, be more energetic and encouraging.
+If they are feeling anxious or low, acknowledge that first before anything else.`;
+}
+
 /**
- * Send a message to Gemini with conversation history
+ * Send a message to Gemini with conversation history (fallback only)
  * @param {Array} history - [{role:'user'|'model', parts:[{text:string}]}]
  * @param {string} message - new user message
+ * @param {Object|null} personality - personality profile from Firestore
  * @returns {Promise<string>} AI response text
  */
-export async function sendToGemini(history, message) {
+export async function sendToGemini(history, message, personality = null) {
   const model = genAI.getGenerativeModel({
     model: "gemini-2.5-flash",
-    systemInstruction: SYSTEM_PROMPT,
+    systemInstruction: SYSTEM_PROMPT + buildPersonalityNote(personality),
     generationConfig: {
       maxOutputTokens: 400,
       temperature: 0.7,
@@ -59,13 +106,8 @@ export async function sendToGemini(history, message) {
 
 /**
  * Generate interpretation for PHQ-9 or GAD-7 score
- * @param {string} type - 'phq9' | 'gad7'
- * @param {number} score - total score
- * @param {string} severity - severity label
- * @param {string} userName - user's first name
- * @returns {Promise<{interpretation: string, tips: string[]}>}
  */
-export async function interpretAssessment(type, score, severity, userName) {
+export async function interpretAssessment(type, score, severity, userName, language = 'en') {
   const model = genAI.getGenerativeModel({
     model: "gemini-2.5-flash",
     generationConfig: { maxOutputTokens: 500, temperature: 0.6 },
@@ -74,7 +116,15 @@ export async function interpretAssessment(type, score, severity, userName) {
   const testName = type === "phq9" ? "PHQ-9 depression" : "GAD-7 anxiety";
   const maxScore = type === "phq9" ? 27 : 21;
 
-  const prompt = `${userName} completed the ${testName} screening. Score: ${score}/${maxScore} (${severity}).
+  const languageInstructions = {
+    'en': 'Respond in English.',
+    'hi': 'Respond in Hindi (भारतीय हिंदी).',
+    'mr': 'Respond in Marathi (मराठी).',
+  };
+  const langInstruction = languageInstructions[language] || languageInstructions['en'];
+
+  const prompt = `${langInstruction}
+${userName} completed the ${testName} screening. Score: ${score}/${maxScore} (${severity}).
   
 Write a SHORT empathetic interpretation (2-3 sentences) speaking directly to ${userName}.
 Then list exactly 4 practical coping strategies for their score level.
@@ -88,23 +138,15 @@ Reply ONLY in this JSON format, no markdown:
   try {
     return JSON.parse(text);
   } catch {
-    // Fallback if JSON parsing fails
     return {
-      interpretation: `Thank you for sharing, ${userName}. Your score of ${score} indicates ${severity}. Consider speaking with a mental health professional for personalized support.`,
-      tips: [
-        "Practice deep breathing for 5 minutes daily",
-        "Maintain a consistent sleep schedule",
-        "Reach out to one trusted person this week",
-        "Consider speaking with a counsellor or therapist",
-      ],
+      interpretation: null,
+      tips: null,
     };
   }
 }
 
 /**
  * Detect crisis keywords in a message
- * @param {string} message
- * @returns {boolean}
  */
 export function detectCrisis(message) {
   const patterns = [
@@ -120,16 +162,10 @@ export function detectCrisis(message) {
   return patterns.some((p) => p.test(message));
 }
 
-// ── Feature 3: Mood Pattern AI Insights ──────────────────────────
-
 /**
  * Generate AI insights from mood logs and assessment history
- * @param {Array} moodLogs - last 14 mood logs
- * @param {Array} phq9 - last 3 PHQ-9 results
- * @param {Array} gad7 - last 3 GAD-7 results
- * @returns {Promise<string>} raw structured insight text
  */
-export async function getAIInsights(moodLogs, phq9, gad7) {
+export async function getAIInsights(moodLogs, phq9, gad7, language = 'en') {
   const model = genAI.getGenerativeModel({
     model: "gemini-2.5-flash",
     generationConfig: { maxOutputTokens: 2500, temperature: 0.75 },
@@ -137,7 +173,10 @@ export async function getAIInsights(moodLogs, phq9, gad7) {
 
   const moodSummary = moodLogs.length
     ? moodLogs
-      .map((l) => `${l.date}: mood ${l.score}/10${l.note ? ` (note: "${l.note}")` : ""}`)
+      .map(
+        (l) =>
+          `${l.date}: mood ${l.score}/10${l.note ? ` (note: "${l.note}")` : ""}`
+      )
       .join("\n")
     : "No mood logs recorded yet.";
 
@@ -153,7 +192,15 @@ export async function getAIInsights(moodLogs, phq9, gad7) {
       .join("\n")
     : "No GAD-7 assessments taken.";
 
+  const languageInstructions = {
+    'en': 'Respond in English.',
+    'hi': 'Respond in Hindi (भारतीय हिंदी).',
+    'mr': 'Respond in Marathi (मराठी).',
+  };
+  const langInstruction = languageInstructions[language] || languageInstructions['en'];
+
   const prompt = `You are a compassionate mental health data analyst.
+${langInstruction}
 Analyze this user's data and provide exactly this structure:
 
 MOOD LOGS (last 14 days):
@@ -182,4 +229,3 @@ Be warm, specific, and hopeful. Use their actual numbers.`;
   const result = await model.generateContent(prompt);
   return result.response.text();
 }
-
