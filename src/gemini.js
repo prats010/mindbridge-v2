@@ -4,7 +4,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
 // ── Your Own Trained Model ────────────────────────────────────────
-const OWN_MODEL_BASE = "https://prats010-mindbridge-chat.hf.space";
+const OWN_MODEL_BASE = "https://prats010-mindbridge-chat.hf.space/gradio_api";
 
 /**
  * Send a message to YOUR trained MindBridge model on Hugging Face.
