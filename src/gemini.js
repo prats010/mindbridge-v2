@@ -4,32 +4,52 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
 // ── Your Own Trained Model ────────────────────────────────────────
-const OWN_MODEL_URL = "https://prats010-mindbridge-chat.hf.space/api/chat";
+const OWN_MODEL_BASE = "https://prats010-mindbridge-chat.hf.space";
 
 /**
- * Send a message to YOUR trained MindBridge model on Hugging Face
- * Uses the Gradio REST API directly to avoid CORS credentials issues
- * with the @gradio/client library.
+ * Send a message to YOUR trained MindBridge model on Hugging Face.
+ * Uses the Gradio 4+ REST API (two-step: POST /call → GET /call/<id>)
+ * to avoid CORS credentials issues with the @gradio/client library.
  * @param {string} message - user message
  * @returns {Promise<string>} AI response text
  */
 export async function sendToOwnModel(message) {
   try {
-    const res = await fetch(OWN_MODEL_URL, {
+    // Step 1: Initiate the call → get an event_id
+    const callRes = await fetch(`${OWN_MODEL_BASE}/call/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "omit",
       body: JSON.stringify({ data: [message] }),
     });
 
-    if (!res.ok) {
-      throw new Error(`HF Space responded with ${res.status}`);
+    if (!callRes.ok) {
+      throw new Error(`HF Space /call responded with ${callRes.status}`);
     }
 
-    const json = await res.json();
+    const { event_id } = await callRes.json();
 
-    // Handle different response formats from Gradio REST API
-    let response = json.data;
+    // Step 2: Retrieve the result (SSE stream)
+    const resultRes = await fetch(
+      `${OWN_MODEL_BASE}/call/chat/${event_id}`,
+      { credentials: "omit" }
+    );
+
+    if (!resultRes.ok) {
+      throw new Error(`HF Space result responded with ${resultRes.status}`);
+    }
+
+    // Parse SSE text — look for the last "data:" line (the "complete" event)
+    const sseText = await resultRes.text();
+    const dataLines = sseText.split("\n").filter((l) => l.startsWith("data:"));
+    if (dataLines.length === 0) {
+      throw new Error("No data received from HF Space SSE stream");
+    }
+
+    const lastData = JSON.parse(dataLines[dataLines.length - 1].slice(5).trim());
+
+    // Handle different response formats
+    let response = lastData;
     if (Array.isArray(response)) {
       response = response[0];
     }
