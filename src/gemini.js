@@ -8,18 +8,28 @@ const OWN_MODEL_URL = "https://prats010-mindbridge-chat.hf.space/api/chat";
 
 /**
  * Send a message to YOUR trained MindBridge model on Hugging Face
+ * Uses the Gradio REST API directly to avoid CORS credentials issues
+ * with the @gradio/client library.
  * @param {string} message - user message
  * @returns {Promise<string>} AI response text
  */
 export async function sendToOwnModel(message) {
   try {
-    const { Client } = await import("@gradio/client");
-    const client = await Client.connect("prats010/mindbridge-chat");
-    const result = await client.predict("/chat", {
-      user_input: message,
+    const res = await fetch(OWN_MODEL_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "omit",
+      body: JSON.stringify({ data: [message] }),
     });
-    // Handle different response formats
-    let response = result.data;
+
+    if (!res.ok) {
+      throw new Error(`HF Space responded with ${res.status}`);
+    }
+
+    const json = await res.json();
+
+    // Handle different response formats from Gradio REST API
+    let response = json.data;
     if (Array.isArray(response)) {
       response = response[0];
     }
